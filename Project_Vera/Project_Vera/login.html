@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veritas Chronicle - {{ current_category }} News</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom styles for BBC-like theme and layout (unchanged) */
+        :root {
+            --bbc-red: #bb1919;
+            --sidebar-dark: #1e1e1e;
+            --sidebar-light: #2c2c2c;
+            --text-light: #f5f5f5;
+            --text-hover: #ffffff;
+            --bg-body: #ffffff;
+            /* Login/Register Specific Colors (from previous request) */
+            --dark-background: #1A1A1A;
+            --input-background: #2A2A2A;
+            --border-color: #333333;
+            --text-color-login: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* Sidebar styling - initially wide */
+        #sidebar {
+            width: 280px;
+            transition: width 0.3s ease-in-out;
+        }
+        
+        /* Main content area shifts with the sidebar */
+        #main-content-wrapper {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        
+        /* Collapsed state */
+        .sidebar-collapsed #sidebar {
+            width: 80px;
+        }
+
+        .sidebar-collapsed #main-content-wrapper {
+            margin-left: 80px;
+        }
+        
+        .sidebar-collapsed .nav-text {
+            display: none;
+        }
+
+        .sidebar-collapsed .lg\\:block {
+            display: none !important; 
+        }
+
+        /* Ensure icon visibility in collapsed state */
+        .sidebar-collapsed #sidebar .lucide {
+            margin-right: 0 !important;
+            min-width: 24px;
+        }
+
+        /* BBC-style red divider */
+        .red-divider {
+            height: 4px;
+            background-color: var(--bbc-red);
+        }
+        
+        /* Active state for sidebar links */
+        .nav-active {
+             background-color: var(--bbc-red) !important;
+             color: var(--text-hover) !important;
+        }
+        /* Specific color classes for categories (for article cards) */
+        .category-business { color: #2563eb; } /* Tailwind blue-600 */
+        .category-sports { color: #16a34a; } /* Tailwind green-600 */
+        .category-science { color: #9333ea; } /* Tailwind purple-600 */
+        .category-entertainment { color: #d97706; } /* Tailwind yellow-600 */
+        .category-world-news, .category-home, .category-placeholder { color: var(--bbc-red); } /* Red for general/world/placeholder */
+        
+        /* --- Login/Register Modal Styling --- */
+        #auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Controlled by JS */
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .auth-container {
+            background-color: #222222; 
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            color: var(--text-color-login);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--bbc-red);
+            font-size: 2em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-color-login);
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover:not(.active) {
+            color: var(--bbc-red);
+        }
+
+        .tab-button.active {
+            color: var(--bbc-red);
+            border-bottom: 3px solid var(--bbc-red);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--input-background);
+            color: var(--text-color-login);
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: var(--bbc-red);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(187, 25, 25, 0.3);
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--bbc-red);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .auth-button:hover {
+            background-color: #8c1313;
+        }
+
+        .toggle-message {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.9em;
+        }
+
+        .toggle-message a {
+            color: var(--bbc-red);
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-message a:hover {
+            color: #8c1313;
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <aside id="sidebar" class="fixed top-0 left-0 h-full bg-[--sidebar-dark] text-[--text-light] shadow-xl z-30 flex flex-col">
+        <div class="p-6 pb-2 mb-4 bg-gray-900/50 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-[--text-light] nav-text whitespace-nowrap">Veritas Chronicle</h1>
+            <button id="toggle-sidebar" class="p-1 rounded-full hover:bg-[--sidebar-light] text-[--text-light]">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <nav class="flex-grow space-y-2 p-4 pt-0">
+            {% set home_active = 'nav-active' if current_category == 'Home' or current_category == 'World News' else '' %}
+            <a href="{{ url_for('home') }}" class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] transition duration-150 {{ home_active }}">
+                <i data-lucide="home" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Home</span>
+            </a>
+
+            <div class="relative">
+                <button id="category-dropdown-btn" class="flex items-center justify-between w-full p-3 rounded-lg hover:bg-[--sidebar-light] transition duration-150 focus:outline-none">
+                    <div class="flex items-center">
+                        <i data-lucide="list-collapse" class="w-5 h-5 mr-3"></i>
+                        <span class="nav-text text-sm font-medium lg:block">Categories</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform nav-text"></i>
+                </button>
+                
+                <div id="category-dropdown-menu" class="hidden absolute z-40 mt-1 w-56 bg-[--sidebar-light] rounded-md shadow-lg py-1 nav-text">
+                    
+                    {% for cat in categories %}
+                        {% set cat_name_lower = cat.lower() %}
+                        {% set link_slug = cat_name_lower.replace(' ', '-') %}
+                        
+                        {% if cat_name_lower != 'home' %}
+                            {% set active_class = 'bg-gray-700/50' if current_category.lower().replace(' ', '-') == link_slug else '' %}
+                            
+                            <a href="{{ url_for('business_page') if link_slug == 'business' else url_for('category_placeholder', category_name=link_slug) }}" 
+                               class="block px-4 py-2 text-sm hover:bg-gray-700/50 {{ active_class }}">
+                                {{ cat }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="py-2"></div> <h3 class="text-xs font-semibold uppercase text-gray-500 px-3 nav-text">Tools</h3>
+            <a href="#" class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] transition duration-150">
+                <i data-lucide="image-search" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Image Search (False News)</span>
+            </a>
+            <a href="#" class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] transition duration-150">
+                <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Get News Summary</span>
+            </a>
+            <a href="#" class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] transition duration-150">
+                <i data-lucide="history" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Reading History</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-700/50 mt-auto">
+            <a href="#" id="open-auth-modal" class="flex items-center p-3 rounded-lg bg-[--bbc-red] hover:bg-red-700 transition duration-150">
+                <i data-lucide="user" class="w-5 h-5 mr-3 text-white"></i>
+                <span class="nav-text text-sm font-medium text-white">Sign In / Register</span>
+            </a>
+        </div>
+    </aside>
+
+    <main id="main-content-wrapper" class="p-4 md:p-8">
+        
+        <header class="mb-8">
+            <div class="flex items-center justify-between pb-2">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight">{{ current_category }}</h2>
+                <span class="text-lg text-gray-500 hidden sm:block">{{ current_date }}</span>
+            </div>
+            <div class="red-divider w-full"></div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            {% if articles %}
+                {% for article in articles %}
+                
+                <article class="col-span-1 {% if loop.first %}lg:col-span-2{% endif %} bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden">
+                    
+                    {% if article.image_url %}
+                    <img src="{{ article.image_url }}" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/800x450/444444/ffffff?text=Image+Not+Found'"
+                             alt="{{ article.title }}" class="w-full h-64 object-cover">
+                    {% else %}
+                    <div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500">No Image Available</div>
+                    {% endif %}
+                    
+                    <div class="p-6">
+                        <span class="text-sm font-semibold uppercase category-{{ article.category }}">{{ article.category | replace('-', ' ') | title }}</span>
+                        
+                        <h3 class="mt-2 text-2xl font-bold leading-tight text-gray-900 hover:text-red-700">
+                            <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">
+                                {{ article.title }}
+                            </a>
+                        </h3>
+                        <p class="mt-4 text-gray-600 line-clamp-3">
+                            {{ article.description if article.description else 'No description available for this article.' }}
+                        </p>
+                        <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                            <span>Source: {{ article.source }}</span>
+                            <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="font-medium text-[--bbc-red] hover:text-red-700">
+                                Read Full Story &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            {% else %}
+                <p class="col-span-full text-center text-gray-500 p-10">
+                    No articles found for the **{{ current_category }}** category.
+                    {% if current_category != 'Home' and current_category != 'Business' %}
+                        <br>This category feature is currently a placeholder. Please check back for **Home** or **Business** news.
+                    {% endif %}
+                </p>
+            {% endif %}
+
+        </section>
+
+        <footer class="mt-12 pt-6 border-t border-gray-300 text-center text-gray-500 text-sm">
+            &copy; 2025 Veritas Chronicle. All rights reserved. Content aggregated from various sources.
+        </footer>
+
+    </main>
+    
+    <div id="auth-modal">
+        <div class="auth-container">
+            <div class="auth-header">Veritas Chronicle</div>
+
+            <div class="tabs">
+                <button class="tab-button active" id="loginTab">Login</button>
+                <button class="tab-button" id="registerTab">Register</button>
+            </div>
+
+            <div id="loginForm">
+                <form onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="auth-button">Login</button>
+                </form>
+                <div class="toggle-message">
+                    Don't have an account? <a id="showRegister">Register here</a>
+                </div>
+            </div>
+
+            <div id="registerForm" class="hidden">
+                <form onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="registerName">Full Name:</label>
+                        <input type="text" id="registerName" name="fullName" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="email" id="registerEmail" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password:</label>
+                        <input type="password" id="registerPassword" name="password" placeholder="Create a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password:</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                    </div>
+                    <button type="submit" class="auth-button">Register</button>
+                </form>
+                <div class="toggle-message">
+                    Already have an account? <a id="showLogin">Login here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            lucide.createIcons();
+
+            const body = document.body;
+            const sidebar = document.getElementById('sidebar');
+            const toggleButton = document.getElementById('toggle-sidebar');
+            const categoryBtn = document.getElementById('category-dropdown-btn');
+            const categoryMenu = document.getElementById('category-dropdown-menu');
+
+            // --- Sidebar Toggle Logic ---
+            toggleButton.addEventListener('click', () => {
+                body.classList.toggle('sidebar-collapsed');
+                
+                // Hide dropdown menu when collapsing sidebar
+                if (body.classList.contains('sidebar-collapsed')) {
+                    categoryMenu.classList.add('hidden');
+                }
+            });
+
+            // --- Dropdown Toggle Logic ---
+            categoryBtn.addEventListener('click', () => {
+                // Only toggle if the sidebar is expanded
+                if (!body.classList.contains('sidebar-collapsed')) {
+                    categoryMenu.classList.toggle('hidden');
+                    // Optional: Rotate the chevron icon
+                    const chevron = categoryBtn.querySelector('[data-lucide="chevron-down"]');
+                    if (chevron) {
+                        chevron.classList.toggle('rotate-180');
+                    }
+                }
+            });
+
+            // Close dropdown if clicked outside
+            document.addEventListener('click', (event) => {
+                if (!categoryBtn.contains(event.target) && !categoryMenu.contains(event.target)) {
+                    categoryMenu.classList.add('hidden');
+                    const chevron = categoryBtn.querySelector('[data-lucide="chevron-down"]');
+                    if (chevron) {
+                        chevron.classList.remove('rotate-180');
+                    }
+                }
+            });
+
+            // Initial setup for mobile/small screens: start collapsed
+            if (window.innerWidth < 768) { // md: breakpoint in Tailwind is 768px
+                body.classList.add('sidebar-collapsed');
+            }
+
+            // --- New Modal/Login/Register Logic ---
+            const authModal = document.getElementById('auth-modal');
+            const openAuthModalBtn = document.getElementById('open-auth-modal');
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const showRegisterLink = document.getElementById('showRegister');
+            const showLoginLink = document.getElementById('showLogin');
+
+            function showLoginForm() {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            }
+
+            function showRegisterForm() {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+            
+            // Open Modal
+            openAuthModalBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                authModal.style.display = 'flex';
+                showLoginForm(); // Show login form by default
+            });
+
+            // Close Modal when clicking outside the container
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) {
+                    authModal.style.display = 'none';
+                }
+            });
+
+            // Tab & Link switching
+            loginTab.addEventListener('click', showLoginForm);
+            registerTab.addEventListener('click', showRegisterForm);
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showRegisterForm();
+            });
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showLoginForm();
+            });
+
+        });
+    </script>
+</body>
+</html>

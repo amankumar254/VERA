@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vera - {{ current_category }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bbc-red: #bb1919;
+            --sidebar-dark: #1e1e1e;
+            --sidebar-light: #2c2c2c;
+            --text-light: #f5f5f5;
+            --text-hover: #ffffff;
+            --bg-body: #ffffff;
+            --dark-background: #1A1A1A;
+            --input-background: #2A2A2A;
+            --border-color: #333333;
+            --text-color-login: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        #sidebar {
+            width: 260px;
+            transition: 0.3s ease-in-out;
+        }
+
+        #main-content-wrapper {
+            margin-left: 260px;
+            transition: 0.3s ease-in-out;
+        }
+
+        .sidebar-collapsed #sidebar {
+            width: 80px;
+        }
+
+        .sidebar-collapsed #main-content-wrapper {
+            margin-left: 80px;
+        }
+
+        .sidebar-collapsed .nav-text {
+            display: none;
+        }
+
+        .sidebar-collapsed .lg\:block {
+            display: none !important;
+        }
+
+        .red-divider {
+            height: 4px;
+            background-color: var(--bbc-red);
+        }
+
+        .nav-active {
+            background-color: var(--bbc-red) !important;
+            color: white !important;
+        }
+
+        .category-business { color: #2563eb; }
+        .category-sports { color: #16a34a; }
+        .category-science { color: #9333ea; }
+        .category-entertainment { color: #d97706; }
+        .category-world, .category-home, .category-general { color: var(--bbc-red); }
+
+        /* COLLAPSED SIDEBAR FIXES */
+        .sidebar-collapsed #sidebar {
+            width: 80px !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .sidebar-collapsed #sidebar .nav-text {
+            display: none !important;
+        }
+
+        .sidebar-collapsed #sidebar a {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .sidebar-collapsed #sidebar i.lucide {
+            margin-right: 0 !important;
+        }
+
+        .sidebar-collapsed #sidebar nav {
+            margin-left: 0 !important;
+        }
+
+        .sidebar-collapsed #sidebar .section-label {
+            display: none !important;
+        }
+
+        .sidebar-collapsed #sidebar #profile-display,
+        .sidebar-collapsed #sidebar #auth-link-container {
+            justify-content: center !important;
+            text-align: center !important;
+        }
+
+        .sidebar-collapsed #sidebar #auth-link-container span {
+            display: none !important;
+        }
+
+        .sidebar-collapsed #main-content-wrapper {
+            margin-left: 80px !important;
+        }
+
+        /* Sidebar Animations */
+        #sidebar {
+            transition: width 0.30s ease, padding 0.30s ease;
+        }
+
+        #main-content-wrapper {
+            transition: margin-left 0.30s ease;
+        }
+
+        /* Tooltip */
+        .sidebar-tooltip {
+            position: absolute;
+            left: 85px;
+            background: #111;
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-50%) scale(0.9);
+            transition: all 0.18s ease-out;
+            z-index: 9999;
+        }
+
+        .sidebar-collapsed a:hover .sidebar-tooltip {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+        }
+
+        /* Dock Hover */
+        .sidebar-collapsed #sidebar a i.lucide {
+            transition: transform 0.2s ease-out;
+        }
+
+        .sidebar-collapsed #sidebar a:hover i.lucide {
+            transform: scale(1.35);
+        }
+
+        .sentiment-modal {
+            background: #121212;
+            color: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 520px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.3);
+        }
+
+        .summary-modal-container {
+            max-height: 85vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        /* Scrollable fake news result */
+        .fake-news-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+
+            /* custom scrollbar */
+            scrollbar-width: thin;
+            scrollbar-color: #555 #222;
+        }
+
+        .fake-news-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .fake-news-scroll::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 6px;
+        }
+
+        .fake-news-scroll::-webkit-scrollbar-track {
+            background: #222;
+        }
+        /* Fix recommendation modal overflow */
+        #recommendation-modal .modal-box {
+            max-height: 80vh;             /* modal stays within screen */
+            overflow: hidden;             /* prevent body bleed */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Results container */
+        #recResults {
+            max-height: 50vh;             /* scroll area */
+            overflow-y: auto;             /* scrolling */
+            margin-top: 1rem;
+
+            /* Visual styling */
+            background: #1a1a1a !important;  
+            border: 1px solid #333 !important;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        /* Allow links to be clickable (not disabled by modal) */
+        #recResults a {
+            pointer-events: auto !important;
+        }
+
+        /* Individual article cards */
+        #recResults .result-card {
+            background: #262626;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #3a3a3a;
+            margin-bottom: 12px;
+            color: #e4e4e4;
+            transition: 0.2s ease;
+        }
+
+        #recResults .result-card:hover {
+            background: #303030;
+            transform: translateY(-2px);
+        }
+
+        /* Titles */
+        #recResults .result-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Description */
+        #recResults .result-desc {
+            color: #b5b5b5;
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        /* Links */
+        #recResults a {
+            color: #8ab4ff !important;
+            text-decoration: underline;
+        }
+
+        #recResults a:hover {
+            color: #bcd3ff !important;
+        }
+        #sidebar {
+            overflow-y: auto;  /* Enable scrolling */
+            scrollbar-width: thin; /* Firefox */
+        }
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 6px;
+        }
+        #sidebar .scroll-zone {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+
+    </style>
+</head>
+
+<body class="bg-gray-100">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar"
+        class="fixed top-0 left-0 h-full bg-[--sidebar-dark] text-[--text-light] shadow-xl z-30 flex flex-col">
+
+        <div class="p-6 pb-3 bg-gray-900/50 flex items-center justify-between">
+            <h1 class="text-xl font-bold whitespace-nowrap nav-text">Vera.</h1>
+            <button id="toggle-sidebar" class="p-2 rounded-lg hover:bg-[--sidebar-light] text-[--text-light] flex items-center justify-center">
+                <i data-lucide="zap" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+
+        <div class="scroll-zone">
+            <nav class="p-4 space-y-2">
+                <!-- all sidebar links here -->
+            </nav>
+        </div>
+
+
+        <nav class="flex-grow p-4 space-y-2">
+            
+
+            <!-- HOME -->
+            <a href="{{ url_for('index') }}"
+                class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] transition
+                {% if current_category == 'Home' %}nav-active{% endif %}">
+                <i data-lucide="home" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Home</span>
+            </a>
+
+            <!-- CATEGORY DROPDOWN -->
+            <div class="relative">
+                <button id="category-dropdown-btn"
+                    class="flex w-full items-center justify-between p-3 rounded-lg hover:bg-[--sidebar-light]">
+                    <div class="flex items-center">
+                        <i data-lucide="list-collapse" class="w-5 h-5 mr-3"></i>
+                        <span class="nav-text text-sm font-medium">Categories</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform"></i>
+                </button>
+
+                <div id="category-dropdown-menu"
+                    class="hidden absolute z-40 mt-1 w-56 bg-[--sidebar-light] rounded-lg shadow-lg py-1">
+
+                    {% for cat in categories %}
+                        {% set slug = cat.lower().replace(' ', '-') %}
+                        {% if slug != 'home' %}
+                        <a href="{{ url_for('category_page', category=slug) }}"
+                            class="block px-4 py-2 text-sm hover:bg-gray-700/50
+                            {% if current_category.lower() == cat.lower() %}bg-gray-700/50{% endif %}">
+                            {{ cat }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- TOOLS HEADER -->
+            <h3 class="text-xs font-semibold uppercase text-gray-500 px-2 mt-4 nav-text">Tools</h3>
+
+            <!-- TOOLS -->
+            <a href="#" id="open-sentiment-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] relative">
+                <i data-lucide="smile" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Sentiment Analysis</span>
+                <span class="sidebar-tooltip">Sentiment Analysis</span>
+            </a>
+
+
+
+            <a href="#" id="open-summary-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
+                <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Summarize Article</span>
+            </a>
+
+
+
+            <button id="open-recommendation-modal"
+                class="tool-btn flex items-center w-full p-3 rounded-lg hover:bg-[--sidebar-light] relative text-left">
+                <i data-lucide="sparkles" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">News Recommendation</span>
+                <span class="sidebar-tooltip">News Recommendation</span>
+            </button>
+
+
+
+
+            <!-- FAKE NEWS DETECTOR (TEXT/URL) -->
+            <a href="#" id="open-fake-news-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
+                <i data-lucide="shield-check" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Fake News Detector</span>
+            </a>
+
+            <a href="#" id="open-compare-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
+                <i data-lucide="link" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Article Comparison</span>
+            </a>
+
+
+            <a href="/cluster" 
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]"> 
+                <i data-lucide="network" class="w-5 h-5 mr-3"></i> 
+                <span class="nav-text text-sm">Story Clustering</span> 
+            </a>
+
+            <a href="#" id="open-false-news-modal"
+                class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] relative">
+                <i data-lucide="search-check" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Image Search (False News)</span>
+                <span class="sidebar-tooltip">False Image Check</span>
+            </a>
+
+            <a href="#" id="open-history-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
+                <i data-lucide="history" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Reading History</span>
+            </a>
+
+        </nav>
+
+        <!-- LOGIN / PROFILE -->
+        <div class="p-4 border-t border-gray-700/40">
+            <a href="#" id="open-auth-modal"
+                class="flex items-center p-3 rounded-lg bg-[--bbc-red] hover:bg-red-700">
+                <i data-lucide="user" class="w-6 h-6 mr-3 text-white"></i>
+                <span class="nav-text text-sm text-white font-medium">Sign In / Register</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content-wrapper" class="p-6 md:p-10">
+
+        <header class="mb-8">
+            <div class="flex items-center justify-between pb-2">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
+                    {{ current_category }}
+                </h2>
+                <span class="text-lg text-gray-500 hidden sm:block">
+                    {{ current_date }}
+                </span>
+            </div>
+            <div class="red-divider"></div>
+        </header>
+
+        <!-- NEWS GRID -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            {% if articles %}
+                {% for article in articles %}
+
+                <article class="col-span-1 
+                    {% if loop.first %}lg:col-span-2{% endif %}
+                    bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden">
+
+                    {% if article.image_url %}
+                    <img src="{{ article.image_url }}"
+                        onerror="this.onerror=null;this.src='https://placehold.co/800x450/333/fff?text=Image+Not+Found'"
+                        alt="{{ article.title }}" 
+                        class="w-full h-64 object-cover">
+                    {% else %}
+                    <div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500">
+                        No Image Available
+                    </div>
+                    {% endif %}
+
+                    <div class="p-6">
+
+                        <span class="text-sm font-semibold uppercase category-{{ article.category }}">
+                            {{ article.category | replace('-', ' ') | title }}
+                        </span>
+
+                        <h3 class="mt-2 text-2xl font-bold leading-tight text-gray-900 hover:text-red-700">
+                            <a 
+                                href="{{ article.url }}" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                data-article-title="{{ article.title }}"
+                                data-article-source="{{ article.source }}">
+                                {{ article.title }}
+                            </a>
+                        </h3>
+
+                        <p class="mt-4 text-gray-600 line-clamp-3">
+                            {{ article.description if article.description else 'No description available for this article.' }}
+                        </p>
+
+                        <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                            <span>Source: {{ article.source }}</span>
+
+                            <a href="{{ article.url }}" 
+                                target="_blank" 
+                                class="font-medium text-[--bbc-red] hover:text-red-700">
+                                Read Full Story →
+                            </a>
+                        </div>
+
+                    </div>
+                </article>
+
+                {% endfor %}
+
+            {% else %}
+                <p class="col-span-full text-center text-gray-500 p-10">
+                    No articles found for <strong>{{ current_category }}</strong>.
+                </p>
+            {% endif %}
+
+        </section>
+
+        <footer class="mt-12 pt-6 border-t text-center text-gray-500 text-sm">
+            &copy; 2025 Vera. All rights reserved.
+        </footer>
+
+    </main>
+    <!-- ========================== MODALS SECTION ========================== -->
+
+    <!-- AUTH MODAL — GLASS NEO -->
+    <div id="auth-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+        <div class="w-full max-w-md bg-[#1E1E1E]/80 rounded-2xl shadow-2xl 
+                    p-8 border border-gray-700/50">
+
+            <!-- HEADER -->
+            <h2 class="text-3xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
+                <i data-lucide="user" class="w-7 h-7 text-red-400"></i>
+                Vera.
+            </h2>
+
+            <!-- TABS -->
+            <div class="flex mb-6">
+                <button id="loginTab"
+                        class="flex-1 py-2 text-center font-semibold rounded-l-lg 
+                            bg-red-600 text-white hover:bg-red-700 transition">
+                    Login
+                </button>
+                <button id="registerTab"
+                        class="flex-1 py-2 text-center font-semibold rounded-r-lg 
+                            bg-gray-700 text-gray-300 hover:bg-gray-600 transition">
+                    Register
+                </button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginForm">
+                <form onsubmit="return false;" class="space-y-5">
+
+                    <div>
+                        <label class="text-gray-300 text-sm mb-1 block">Email</label>
+                        <input type="email" id="loginEmail"
+                            placeholder="Enter email"
+                            class="w-full bg-[#2A2A2A] text-gray-200 p-3 rounded-lg 
+                                border border-gray-700 focus:border-red-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-gray-300 text-sm mb-1 block">Password</label>
+                        <input type="password" id="loginPassword"
+                            placeholder="Enter password"
+                            class="w-full bg-[#2A2A2A] text-gray-200 p-3 rounded-lg 
+                                border border-gray-700 focus:border-red-500 outline-none">
+                    </div>
+
+                    <button class="w-full py-3 bg-red-600 hover:bg-red-700 text-white 
+                                font-semibold rounded-lg transition">
+                        Login
+                    </button>
+
+                </form>
+
+                <p class="text-gray-400 text-sm mt-4 text-center">
+                    No account?
+                    <a id="showRegister" class="text-red-400 font-semibold cursor-pointer">Register</a>
+                </p>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="registerForm" class="hidden">
+                <form onsubmit="return false;" class="space-y-5">
+
+                    <div>
+                        <label class="text-gray-300 text-sm mb-1 block">Full Name</label>
+                        <input type="text" id="registerName"
+                            placeholder="Enter full name"
+                            class="w-full bg-[#2A2A2A] text-gray-200 p-3 rounded-lg 
+                                border border-gray-700 focus:border-red-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-gray-300 text-sm mb-1 block">Email</label>
+                        <input type="email" id="registerEmail"
+                            placeholder="Enter email"
+                            class="w-full bg-[#2A2A2A] text-gray-200 p-3 rounded-lg 
+                                border border-gray-700 focus:border-red-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-gray-300 text-sm mb-1 block">Password</label>
+                        <input type="password" id="registerPassword"
+                            placeholder="Create password"
+                            class="w-full bg-[#2A2A2A] text-gray-200 p-3 rounded-lg 
+                                border border-gray-700 focus:border-red-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-gray-300 text-sm mb-1 block">Confirm Password</label>
+                        <input type="password" id="confirmPassword"
+                            placeholder="Confirm password"
+                            class="w-full bg-[#2A2A2A] text-gray-200 p-3 rounded-lg 
+                                border border-gray-700 focus:border-red-500 outline-none">
+                    </div>
+
+                    <button class="w-full py-3 bg-red-600 hover:bg-red-700 text-white 
+                                font-semibold rounded-lg transition">
+                        Register
+                    </button>
+
+                </form>
+
+                <p class="text-gray-400 text-sm mt-4 text-center">
+                    Already have an account?
+                    <a id="showLogin" class="text-red-400 font-semibold cursor-pointer">Login</a>
+                </p>
+            </div>
+
+            <!-- CLOSE BUTTON -->
+            <button id="close-auth-modal"
+                    class="mt-6 w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg 
+                        text-gray-300 font-semibold transition">
+                Close
+            </button>
+
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal" class="hidden fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+        <div class="auth-container bg-[#222] p-8 rounded-xl w-full max-w-md shadow-xl">
+
+            <div class="auth-header text-xl">Profile Settings</div>
+
+            <div class="text-center">
+                <img id="current-profile-pic"
+                    src="https://via.placeholder.com/100/bb1919/fff?text=U"
+                    class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-white cursor-pointer"
+                    onclick="document.getElementById('file-upload').click()">
+                <input id="file-upload" class="hidden" type="file" accept="image/*">
+            </div>
+
+            <form id="profileSettingsForm" onsubmit="return false;">
+
+                <div class="form-group">
+                    <label>Change Username</label>
+                    <input type="text" id="newUsername" required placeholder="New username">
+                </div>
+
+                <button class="auth-button">Save Changes</button>
+                <button type="button" id="close-profile-modal"
+                    class="auth-button mt-3 bg-gray-700">Close</button>
+            </form>
+
+        </div>
+    </div>
+
+
+    <!-- SUMMARY MODAL (GLASS NEO) -->
+    <div id="summary-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+        <div class="summary-modal-container w-full max-w-xl bg-[#1E1E1E] 
+                    rounded-2xl shadow-xl p-8 border border-gray-700/50 
+                    overflow-y-auto max-h-[85vh]">
+
+            <h2 class="text-3xl font-bold text-white mb-1 flex items-center gap-3">
+                <i data-lucide="file-text" class="w-7 h-7 text-blue-400"></i>
+                Article Summary Tool
+            </h2>
+
+            <p class="text-gray-400 text-sm mb-8">
+                Paste an article URL below and generate an instant summary.
+            </p>
+
+            <form id="summaryForm" class="space-y-5">
+
+                <div>
+                    <label class="text-gray-300 text-sm mb-2 block">Article URL</label>
+                    <input id="articleLink"
+                        type="url"
+                        placeholder="Paste article URL…"
+                        class="w-full bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                                focus:border-blue-500 focus:outline-none h-12" required>
+                </div>
+
+                <button id="generateSummaryBtn"
+                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 transition rounded-lg 
+                        font-semibold text-white">
+                    Generate Summary
+                </button>
+
+                <button type="button" id="close-summary-modal"
+                    class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 mt-2">
+                    Cancel
+                </button>
+            </form>
+
+            <div id="summaryResult" 
+                class="hidden mt-8 bg-[#0f0f0f] rounded-xl border border-gray-700 p-6">
+
+                <h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-yellow-400"></i>
+                    Summary
+                </h3>
+
+                <div id="summaryText"
+                    class="text-gray-300 text-sm leading-relaxed 
+                           max-h-[350px] overflow-y-auto pr-2 custom-scroll">
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+   <!-- FALSE IMAGE DETECTOR — GLASS NEO -->
+    <div id="false-news-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+        <div class="w-full max-w-xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 
+                    border border-gray-700/50">
+
+            <!-- HEADER -->
+            <h2 class="text-3xl font-bold text-white mb-3 flex items-center gap-3">
+                <i data-lucide="search-check" class="w-7 h-7 text-red-400"></i>
+                False Image / News Detector
+            </h2>
+
+            <p class="text-gray-400 text-sm mb-6">
+                Paste an article URL, image URL, or upload an image to detect misinformation.
+            </p>
+
+            <!-- FORM -->
+            <form id="falseImageForm" class="space-y-5">
+
+                <!-- URL INPUT -->
+                <div>
+                    <label class="text-gray-300 text-sm mb-2 block">News Article / Image URL</label>
+                    <input id="falseImageUrl"
+                        type="url"
+                        placeholder="Paste image or article URL…"
+                        class="w-full bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                            focus:border-red-500 focus:outline-none h-12">
+                </div>
+
+                <!-- DIVIDER -->
+                <div class="flex items-center my-2">
+                    <div class="border-t border-gray-600 flex-grow"></div>
+                    <span class="px-3 text-gray-500 text-sm">OR</span>
+                    <div class="border-t border-gray-600 flex-grow"></div>
+                </div>
+
+                <!-- IMAGE UPLOAD -->
+                <div>
+                    <label class="text-gray-300 text-sm mb-2 block">Upload Image</label>
+                    <input id="falseImageUpload"
+                        type="file" accept="image/*"
+                        class="w-full text-gray-300 file:bg-red-600 file:text-white 
+                            file:border-0 file:px-4 file:py-2 file:rounded-lg cursor-pointer">
+                </div>
+
+                <!-- BUTTONS -->
+                <button id="falseImageCheckBtn"
+                    class="w-full py-3 bg-red-600 hover:bg-red-700 transition rounded-lg 
+                        font-semibold text-white">
+                    Check
+                </button>
+
+                <button type="button" id="close-false-news-modal"
+                    class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200">
+                    Cancel
+                </button>
+
+            </form>
+
+            <!-- OUTPUT CARD -->
+            <div id="falseImageResult"
+                class="hidden mt-8 bg-[#111] rounded-xl p-6 border border-gray-700">
+
+                <h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-yellow-400"></i>
+                    Result
+                </h3>
+
+                <p id="falseImageText" class="text-gray-300 text-sm leading-relaxed"></p>
+            </div>
+
+        </div>
+    </div>
+    <!-- FAKE NEWS DETECTOR — GLASS NEO -->
+<div id="fake-news-modal" 
+    class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+    <div class="w-full max-w-xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 
+                border border-gray-700/50">
+
+        <!-- HEADER -->
+        <h2 class="text-3xl font-bold text-white mb-3 flex items-center gap-3">
+            <i data-lucide="shield-check" class="w-7 h-7 text-purple-400"></i>
+            Fake News Detector
+        </h2>
+
+        <p class="text-gray-400 text-sm mb-6">
+            Paste a news article URL or raw text to detect if the content is misleading, biased, or suspicious.
+        </p>
+
+        <!-- FORM -->
+        <form id="fakeNewsForm" class="space-y-5">
+
+            <!-- URL INPUT -->
+            <div>
+                <label class="text-gray-300 text-sm mb-2 block">Article URL</label>
+                <input id="fakeNewsUrl"
+                    type="url"
+                    placeholder="Paste article URL…"
+                    class="w-full bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                        focus:border-purple-500 focus:outline-none h-12">
+            </div>
+
+            <!-- TEXT INPUT -->
+            <div>
+                <label class="text-gray-300 text-sm mb-2 block">Article Text (optional)</label>
+                <textarea id="fakeNewsText"
+                    placeholder="Paste article text…"
+                    class="w-full bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                        focus:border-purple-500 focus:outline-none h-28"></textarea>
+            </div>
+
+            <!-- BUTTONS -->
+            <button id="fakeNewsCheckBtn"
+                class="w-full py-3 bg-purple-600 hover:bg-purple-700 transition rounded-lg 
+                    font-semibold text-white">
+                Analyze News
+            </button>
+
+            <button type="button" id="close-fake-news-modal"
+                class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200">
+                Cancel
+            </button>
+
+        </form>
+
+        <!-- OUTPUT CARD -->
+        <div id="fakeNewsResult"
+            class="hidden mt-8 bg-[#111] rounded-xl p-6 border border-gray-700 fake-news-scroll">
+
+            <h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                <i data-lucide="alert-octagon" class="w-6 h-6 text-red-400"></i>
+                Result
+            </h3>
+
+            <p id="fakeNewsTextResult" class="text-gray-300 text-sm leading-relaxed"></p>
+        </div>
+
+    </div>
+</div>
+
+
+    <!-- SENTIMENT MODAL -->
+    <div id="sentiment-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+        <div class="w-full max-w-xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 border border-gray-700/50">
+
+            <h2 class="text-3xl font-bold text-white mb-1 flex items-center gap-3">
+                <i data-lucide="activity" class="w-7 h-7 text-red-500"></i>
+                Sentiment Analyzer
+            </h2>
+            <p class="text-gray-400 text-sm mb-8">Enter text or a news article URL to analyze sentiment.</p>
+
+            <form id="sentimentForm" class="space-y-5">
+
+                <div>
+                    <label class="text-gray-300 text-sm mb-2 block">Text / URL</label>
+                    <textarea id="sentimentText" 
+                              placeholder="Paste any news text or link…" 
+                              class="w-full bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                                     focus:border-red-500 focus:outline-none h-28"></textarea>
+                </div>
+
+                <button id="analyzeSentimentBtn"
+                        class="w-full py-3 bg-red-600 hover:bg-red-700 transition rounded-lg font-semibold text-white">
+                    Analyze
+                </button>
+
+                <button type="button" 
+                        id="close-sentiment-modal"
+                        class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 mt-2">
+                    Cancel
+                </button>
+            </form>
+
+            <div id="sentimentResult" class="hidden mt-8 bg-[#111] rounded-xl p-6 border border-gray-700">
+
+                <h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-yellow-400"></i>
+                    Sentiment Result
+                </h3>
+
+                <p id="sentimentTextResult" 
+                   class="text-lg font-semibold text-gray-300 mb-2"></p>
+
+                <p id="sentimentMeta" 
+                   class="text-sm text-gray-500 leading-relaxed"></p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- STORY CLUSTERING MODAL (Glass Neo) -->
+    <div id="cluster-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+        <div class="w-full max-w-2xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 border border-gray-700/50">
+
+            <h2 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                <i data-lucide="network" class="w-7 h-7 text-green-400"></i>
+                Story Clustering Tool
+            </h2>
+            <p class="text-gray-400 text-sm mb-6">Paste multiple articles below, separated by blank lines.</p>
+
+            <textarea id="clusterInput"
+                class="w-full h-48 bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                       focus:border-green-500 focus:outline-none custom-scroll"
+                placeholder="Paste Article 1…
+
+Paste Article 2…
+
+Paste Article 3…"></textarea>
+
+            <button id="runClusterBtn"
+                class="w-full py-3 mt-4 bg-green-600 hover:bg-green-700 transition rounded-lg 
+                       font-semibold text-white">
+                Run Clustering
+            </button>
+
+            <button id="close-cluster-modal"
+                class="w-full py-3 mt-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200">
+                Cancel
+            </button>
+
+            <div id="clusterResult"
+                class="hidden mt-8 bg-[#0f0f0f] rounded-xl border border-gray-700 p-6 
+                       max-h-[350px] overflow-y-auto custom-scroll text-gray-300 text-sm">
+            </div>
+        </div>
+    </div>
+
+
+    <!-- HISTORY MODAL — GLASS NEO -->
+    <div id="history-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+        <div class="w-full max-w-xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 border border-gray-700/50">
+
+            <!-- Header -->
+            <h2 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                <i data-lucide="history" class="w-7 h-7 text-purple-400"></i>
+                Reading History
+            </h2>
+            <p class="text-gray-400 text-sm mb-6">Your previously opened articles appear here.</p>
+
+            <!-- Scrollable List -->
+            <div id="history-list"
+                class="max-h-[350px] overflow-y-auto custom-scroll bg-[#111] border border-gray-700 rounded-xl p-4 space-y-4 text-gray-300 text-sm">
+                <!-- Items injected via JS -->
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4 mt-6">
+                <button id="clear-history-btn"
+                    class="w-full py-3 bg-yellow-600 hover:bg-yellow-700 transition rounded-lg font-semibold text-white">
+                    Clear History
+                </button>
+
+                <button id="close-history-modal"
+                    class="w-full py-3 bg-gray-700 hover:bg-gray-600 transition rounded-lg text-gray-200">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+    <!-- NEWS RECOMMENDATION MODAL -->
+<div id="recommendation-modal" 
+        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto">
+
+    <div class="modal-box w-full max-w-xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 border border-gray-700/50">
+
+
+        <h2 class="text-3xl font-bold text-white mb-3 flex items-center gap-3">
+            <i data-lucide="sparkles" class="w-7 h-7 text-purple-400"></i>
+            News Recommendation
+        </h2>
+
+        <p class="text-gray-400 text-sm mb-6">
+            Type any topic, keyword, sentence, or article context to get AI-powered related news.
+        </p>
+
+        <!-- Input box -->
+        <input id="recInput"
+            class="w-full bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                   focus:border-purple-500 focus:outline-none h-12"
+            placeholder="Type: AI, Politics, India, Technology…">
+
+        <!-- Recommend Button -->
+        <button id="recBtn"
+            class="mt-6 w-full py-3 bg-purple-600 hover:bg-purple-700 transition rounded-lg 
+                   font-semibold text-white">
+            Recommend News
+        </button>
+
+        <button type="button" id="close-recommendation-modal"
+            class="mt-3 w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200">
+            Cancel
+        </button>
+
+        <!-- Result Card -->
+        <div id="recResults"
+            class="hidden mt-8 bg-[#111] rounded-xl p-6 border border-gray-700"></div>
+
+    </div>
+</div>
+    <!-- ARTICLE COMPARISON MODAL — GLASS NEO -->
+<div id="compare-modal" 
+     class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+    <div class="w-full max-w-2xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 border border-gray-700/50">
+
+        <h2 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <i data-lucide="link" class="w-7 h-7 text-blue-400"></i>
+            Article Comparison Tool
+        </h2>
+
+        <p class="text-gray-400 text-sm mb-6">Enter two or more article URLs to compare.</p>
+
+        <textarea id="compareInput"
+            class="w-full h-40 bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                   focus:border-blue-500 focus:outline-none custom-scroll"
+            placeholder="https://article1.com\nhttps://article2.com"></textarea>
+
+        <button id="compareBtn"
+            class="w-full py-3 mt-4 bg-blue-600 hover:bg-blue-700 transition rounded-lg 
+                   font-semibold text-white">
+            Compare Articles
+        </button>
+
+        <button id="close-compare-modal"
+            class="w-full py-3 mt-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200">
+            Cancel
+        </button>
+
+        <div id="compareResult"
+            class="hidden mt-8 bg-[#0f0f0f] rounded-xl border border-gray-700 p-6 
+                   max-h-[350px] overflow-y-auto custom-scroll text-gray-300 text-sm">
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    lucide.createIcons();
+
+    const body = document.body;
+    const sidebar = document.getElementById("sidebar");
+    const toggleSidebarBtn = document.getElementById("toggle-sidebar");
+
+    const categoryBtn = document.getElementById("category-dropdown-btn");
+    const categoryMenu = document.getElementById("category-dropdown-menu");
+
+
+    // =========================================================================
+    // SIDEBAR HANDLER
+    // =========================================================================
+    toggleSidebarBtn.addEventListener("click", () => {
+        body.classList.toggle("sidebar-collapsed");
+
+        categoryMenu.classList.add("hidden");
+
+        const chevron = categoryBtn.querySelector('[data-lucide="chevron-down"]');
+        if (chevron) chevron.classList.remove("rotate-180");
+
+        lucide.createIcons();
+    });
+
+
+    // =========================================================================
+    // CATEGORY DROPDOWN
+    // =========================================================================
+    categoryBtn.addEventListener("click", () => {
+        if (!body.classList.contains("sidebar-collapsed")) {
+            categoryMenu.classList.toggle("hidden");
+            const chevron = categoryBtn.querySelector('[data-lucide="chevron-down"]');
+            if (chevron) chevron.classList.toggle("rotate-180");
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!categoryBtn.contains(e.target) && !categoryMenu.contains(e.target)) {
+            categoryMenu.classList.add("hidden");
+            const chevron = categoryBtn.querySelector('[data-lucide="chevron-down"]');
+            if (chevron) chevron.classList.remove("rotate-180");
+        }
+    });
+
+
+    // =========================================================================
+    // MODALS OPEN/CLOSE
+    // =========================================================================
+    const modals = {
+        auth: document.getElementById("auth-modal"),
+        profile: document.getElementById("profile-modal"),
+        summary: document.getElementById("summary-modal"),
+        sentiment: document.getElementById("sentiment-modal"),
+        falseNews: document.getElementById("false-news-modal"),
+        history: document.getElementById("history-modal")
+    };
+
+    const openers = {
+        auth: document.getElementById("open-auth-modal"),
+        profile: document.getElementById("open-profile-modal"),
+        summary: document.getElementById("open-summary-modal"),
+        sentiment: document.getElementById("open-sentiment-modal"),
+        falseNews: document.getElementById("open-false-news-modal"),
+        history: document.getElementById("open-history-modal"),
+    };
+
+    const closers = {
+        summary: document.getElementById("close-summary-modal"),
+        sentiment: document.getElementById("close-sentiment-modal"),
+        falseNews: document.getElementById("close-false-news-modal"),
+        history: document.getElementById("close-history-modal"),
+        profile: document.getElementById("close-profile-modal"),
+    };
+
+    Object.keys(openers).forEach(key => {
+        if (openers[key]) openers[key].addEventListener("click", () => modals[key].style.display = "flex");
+    });
+
+    Object.keys(closers).forEach(key => {
+        if (closers[key]) closers[key].addEventListener("click", () => modals[key].style.display = "none");
+    });
+
+    Object.values(modals).forEach(modal => {
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.style.display = "none";
+        });
+    });
+
+    // AUTH MODAL TAB SWITCHING
+    document.getElementById("showRegister").onclick = () => {
+        document.getElementById("loginForm").classList.add("hidden");
+        document.getElementById("registerForm").classList.remove("hidden");
+        document.getElementById("loginTab").classList.remove("bg-red-600","text-white");
+        document.getElementById("registerTab").classList.add("bg-red-600","text-white");
+    };
+
+    document.getElementById("showLogin").onclick = () => {
+        document.getElementById("registerForm").classList.add("hidden");
+        document.getElementById("loginForm").classList.remove("hidden");
+        document.getElementById("registerTab").classList.remove("bg-red-600","text-white");
+        document.getElementById("loginTab").classList.add("bg-red-600","text-white");
+    };
+
+    document.getElementById("close-auth-modal").onclick = () => {
+        document.getElementById("auth-modal").style.display = "none";
+    };
+
+
+    // =========================================================================
+    // SUMMARY TOOL — GLASS NEO
+    // =========================================================================
+    const summaryModal = document.getElementById("summary-modal");
+    const summaryForm = document.getElementById("summaryForm");
+    const summaryBtn = document.getElementById("generateSummaryBtn");
+    const summaryResult = document.getElementById("summaryResult");
+    const summaryTextDiv = document.getElementById("summaryText");
+
+    summaryForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const url = document.getElementById("articleLink").value.trim();
+        if (!url) return alert("Enter a valid article URL.");
+
+        summaryBtn.textContent = "Generating…";
+        summaryBtn.disabled = true;
+
+        summaryTextDiv.innerHTML = `
+            <div class="flex items-center gap-2 text-blue-400">
+                <i data-lucide="loader-2" class="animate-spin"></i>
+                <span>Extracting & summarizing article...</span>
+            </div>
+        `;
+        summaryResult.classList.remove("hidden");
+        lucide.createIcons();
+
+        try {
+            const resp = await fetch("/api/summary", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url })
+            });
+
+            const data = await resp.json();
+
+            if (!resp.ok || data.error) {
+                summaryTextDiv.innerHTML = `
+                    <div class="flex items-center gap-3 text-red-400 font-semibold text-lg">
+                        <i data-lucide="alert-triangle"></i>
+                        <span>${data.error}</span>
+                    </div>
+                `;
+            } else {
+                summaryTextDiv.innerHTML = `
+                    <p class="text-lg text-white font-bold mb-3">${data.title ?? ""}</p>
+                    <p class="text-gray-300 leading-relaxed">${data.summary}</p>
+                `;
+            }
+            lucide.createIcons();
+
+        } catch (err) {
+            summaryTextDiv.innerHTML = `
+                <div class="flex items-center gap-3 text-red-400 font-semibold text-lg">
+                    <i data-lucide="wifi-off"></i>
+                    <span>Network Error: ${err.message}</span>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        summaryBtn.textContent = "Generate Summary";
+        summaryBtn.disabled = false;
+    });
+
+
+    // =========================================================================
+    // SENTIMENT ANALYZER — GLASS NEO
+    // =========================================================================
+    const sentimentForm = document.getElementById("sentimentForm");
+    const sentimentBtn = document.getElementById("analyzeSentimentBtn");
+    const sentimentResult = document.getElementById("sentimentResult");
+    const sentimentTextResult = document.getElementById("sentimentTextResult");
+    const sentimentMeta = document.getElementById("sentimentMeta");
+
+    sentimentForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const text = document.getElementById("sentimentText").value.trim();
+        if (text.length < 3) return alert("Enter a valid URL or text.");
+
+        sentimentBtn.textContent = "Analyzing…";
+        sentimentBtn.disabled = true;
+
+        sentimentTextResult.textContent = "Processing…";
+        sentimentTextResult.className = "text-gray-300 font-semibold";
+
+        try {
+            const resp = await fetch("/api/sentiment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text })
+            });
+
+            const data = await resp.json();
+
+            if (!resp.ok || data.error) {
+                sentimentTextResult.textContent = `❌ ${data.error}`;
+                sentimentTextResult.className = "text-red-400 font-bold";
+                sentimentMeta.textContent = "";
+            } else {
+                sentimentTextResult.innerHTML = `${data.emoji} ${data.sentiment}`;
+                sentimentTextResult.className = `text-xl font-bold ${data.color}`;
+
+                const conf = data.confidence ? (data.confidence * 100).toFixed(1) + "%" : "N/A";
+
+                sentimentMeta.innerHTML = `
+                    Confidence: ${conf}<br>
+                    Method: ${data.method}<br>
+                    <span class="text-xs text-gray-500">${data.notes ?? ""}</span>
+                `;
+            }
+
+            sentimentResult.classList.remove("hidden");
+            lucide.createIcons();
+
+        } catch (err) {
+            sentimentTextResult.textContent = `❌ Network error: ${err.message}`;
+            sentimentTextResult.className = "text-red-400 font-bold";
+            sentimentMeta.textContent = "";
+            sentimentResult.classList.remove("hidden");
+        }
+
+        sentimentBtn.textContent = "Analyze";
+        sentimentBtn.disabled = false;
+    });
+// =============================================================
+// FALSE IMAGE DETECTOR (image only)
+// =============================================================
+
+// Correct modal ID from your HTML
+const falseImageModal = document.getElementById("false-news-modal");
+
+// open button (Image Search - False News)
+document.getElementById("open-false-news-modal")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    falseImageModal.classList.remove("hidden");
+});
+
+// close button
+document.getElementById("close-false-news-modal")?.addEventListener("click", () => {
+    falseImageModal.classList.add("hidden");
+});
+
+// Form elements (MATCHED to your HTML)
+const imageForm = document.getElementById("falseImageForm");
+const imageBtn = document.getElementById("falseImageCheckBtn");
+const imageResultBox = document.getElementById("falseImageResult");
+const imageResultText = document.getElementById("falseImageText");
+
+imageForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const url = document.getElementById("falseImageUrl").value.trim();
+    const file = document.getElementById("falseImageUpload").files[0];
+
+    if (!url && !file) {
+        alert("Please provide an image URL or upload a file.");
+        return;
+    }
+
+    imageBtn.textContent = "Checking...";
+    imageBtn.disabled = true;
+    imageResultBox.classList.add("hidden");
+
+    const formData = new FormData();
+    if (file) formData.append("image", file);
+    if (url) formData.append("url", url);
+
+    try {
+        const res = await fetch("/api/image_check", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+            imageResultText.innerHTML =
+                `<div class="text-red-400">Error: ${data.error}</div>`;
+        } else {
+            const ev = data.evaluation || {};
+            imageResultText.innerHTML = `
+                <p><strong>Status:</strong> ${ev.status ?? "Unknown"}</p>
+                <p><strong>Reason:</strong> ${ev.reason ?? "-"}</p>
+                <p><strong>Matches:</strong> ${ev.match_count ?? 0}</p>
+
+                <h4 class="mt-3 font-semibold">Articles Found:</h4>
+                ${
+                    ev.articles?.length
+                    ? ev.articles.map(a =>
+                        `<a href="${a.url}" class="text-blue-400 underline" target="_blank">${a.title}</a><br>`
+                      ).join("")
+                    : `<p class="text-gray-500">No matches found.</p>`
+                }
+            `;
+        }
+
+        imageResultBox.classList.remove("hidden");
+
+    } catch (err) {
+        imageResultText.innerHTML =
+            `<div class="text-red-400">Network Error: ${err.message}</div>`;
+        imageResultBox.classList.remove("hidden");
+    }
+
+    imageBtn.textContent = "Check";
+    imageBtn.disabled = false;
+});
+
+// =============================================================
+// FAKE NEWS DETECTOR (URL / TEXT)
+// =============================================================
+function renderFakeNewsResult(data) {
+    const r = data.result;
+
+    let verdictColor = "text-yellow-400";
+    if (r.reliability_score >= 70) verdictColor = "text-green-400";
+    else if (r.reliability_score < 40) verdictColor = "text-red-400";
+
+    return `
+        <div class="space-y-3 text-gray-200 text-sm">
+
+            <p><strong>Max Similarity:</strong> ${r.max_similarity}</p>
+            <p><strong>Avg Similarity:</strong> ${r.avg_similarity}</p>
+
+            <p class="${verdictColor}">
+                <strong>Reliability Score:</strong> ${r.reliability_score}% 
+            </p>
+
+            <p><strong>Verdict:</strong> ${r.result_text}</p>
+
+            <hr class="border-gray-700 my-3">
+
+            <h4 class="text-lg font-semibold text-white mb-1">Related Articles</h4>
+            <ul class="list-disc ml-5 space-y-1">
+                ${r.related_articles.map(a => `
+                    <li>
+                        <a class="text-blue-400 underline" href="${a.link}" target="_blank">
+                            ${a.title}
+                        </a> 
+                        <span class="text-gray-500">(${a.media})</span>
+                    </li>
+                `).join("")}
+            </ul>
+
+            <hr class="border-gray-700 my-3">
+
+            <h4 class="text-lg font-semibold text-white mb-1">Matching Snippets</h4>
+            <ul class="ml-3 space-y-2">
+                ${r.snippets.map(s => `
+                    <div class="bg-gray-800 p-2 rounded text-gray-300">
+                        <p><strong>${s.title}</strong></p>
+                        <p>${s.snippet}</p>
+                    </div>
+                `).join("")}
+            </ul>
+
+        </div>
+    `;
+}
+
+// =============================================================
+
+
+
+const fakeNewsModal = document.getElementById("fake-news-modal");
+const fakeNewsForm = document.getElementById("fakeNewsForm");
+const fakeNewsBtn = document.getElementById("fakeNewsCheckBtn");
+const fakeNewsResult = document.getElementById("fakeNewsResult");
+const fakeNewsTextResult = document.getElementById("fakeNewsTextResult");
+
+// OPEN BUTTON
+document.getElementById("open-fake-news-modal")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    fakeNewsModal.classList.remove("hidden");
+});
+
+// CLOSE BUTTON
+document.getElementById("close-fake-news-modal").addEventListener("click", () => {
+    fakeNewsModal.classList.add("hidden");
+    fakeNewsResult.classList.add("hidden");
+});
+
+// SUBMIT HANDLER
+fakeNewsForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const url = document.getElementById("fakeNewsUrl").value.trim();
+    const text = document.getElementById("fakeNewsText").value.trim();
+
+    if (!url && !text) {
+        alert("Please provide a URL or article text.");
+        return;
+    }
+
+    fakeNewsBtn.textContent = "Analyzing...";
+    fakeNewsBtn.disabled = true;
+
+    fakeNewsResult.classList.remove("hidden");
+    fakeNewsTextResult.innerHTML = `
+        <i data-lucide="loader-2" class="animate-spin text-purple-400"></i> 
+        Processing...
+    `;
+    lucide.createIcons();
+
+    const formData = new FormData();
+    formData.append("url", url);
+    formData.append("text", text);
+
+
+    try {
+        const res = await fetch("/api/false_news", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+            fakeNewsTextResult.innerHTML =
+                `<span class="text-red-400 font-semibold">Error: ${data.error}</span>`;
+            return;
+        }
+
+        // ----------- FIX: Convert object → clean formatted JSON text -----------
+        let resultText = data.result;
+
+        if (typeof resultText === "object") {
+            resultText = JSON.stringify(resultText, null, 2);
+        }
+
+        fakeNewsTextResult.innerHTML = renderFakeNewsResult(data); lucide.createIcons();
+
+
+        // ----------- Add Related Articles (if available) -----------
+        if (data.related && data.related.length > 0) {
+            fakeNewsTextResult.innerHTML += `
+                <h4 class="text-lg font-semibold text-purple-300 mt-4">Related Verified Articles</h4>
+                <div class="mt-2 space-y-2">
+                    ${data.related
+                        .map(a => `
+                            <div class="border border-gray-700 p-3 rounded-lg">
+                                <a href="${a.url}" target="_blank" class="text-blue-400 underline">
+                                    ${a.title}
+                                </a>
+                                <div class="text-gray-500 text-xs">Source: ${a.source}</div>
+                            </div>
+                        `)
+                        .join("")}
+                </div>
+            `;
+        }
+
+        lucide.createIcons();
+
+    } catch (err) {
+        fakeNewsTextResult.innerHTML =
+            `<span class="text-red-400 font-semibold">Network Error: ${err.message}</span>`;
+    }
+
+    fakeNewsBtn.textContent = "Analyze News";
+    fakeNewsBtn.disabled = false;
+});
+
+    // =========================================================================
+    // STORY CLUSTERING — GLASS NEO
+    // =========================================================================
+    const clusterModal = document.getElementById("cluster-modal");
+    const openClusterBtn = document.querySelector('a[href="/cluster"]');
+    const closeClusterBtn = document.getElementById("close-cluster-modal");
+
+    const clusterInput = document.getElementById("clusterInput");
+    const runClusterBtn = document.getElementById("runClusterBtn");
+    const clusterResult = document.getElementById("clusterResult");
+
+    // Open modal instead of redirection
+    openClusterBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        clusterModal.classList.remove("hidden");
+        clusterResult.classList.add("hidden");
+    });
+
+    closeClusterBtn.addEventListener("click", () => {
+        clusterModal.classList.add("hidden");
+    });
+
+    runClusterBtn.addEventListener("click", async () => {
+        const raw = clusterInput.value.trim();
+        if (!raw) return alert("Enter at least 2 articles.");
+
+        const articles = raw.split(/\n\s*\n/);
+        if (articles.length < 2) return alert("Enter at least 2 articles separated by blank lines.");
+
+        runClusterBtn.textContent = "Clustering…";
+        runClusterBtn.disabled = true;
+
+        try {
+            const resp = await fetch("/api/cluster", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ articles })
+            });
+
+            const data = await resp.json();
+
+            clusterResult.innerHTML = data.error
+                ? `<div class="text-red-400 flex items-center gap-2 font-semibold">
+                        <i data-lucide="alert-triangle"></i> ${data.error}
+                   </div>`
+                : data.html;
+
+            clusterResult.classList.remove("hidden");
+            lucide.createIcons();
+
+        } catch (err) {
+            clusterResult.innerHTML = `
+                <div class="text-red-400 flex items-center gap-2 font-semibold">
+                    <i data-lucide="wifi-off"></i> Network error: ${err.message}
+                </div>
+            `;
+            clusterResult.classList.remove("hidden");
+            lucide.createIcons();
+        }
+
+        runClusterBtn.textContent = "Run Clustering";
+        runClusterBtn.disabled = false;
+    });
+
+
+    // =========================================================================
+    // READING HISTORY
+    // =========================================================================
+    let readingHistory = [];
+    const historyList = document.getElementById("history-list");
+    const clearHistoryBtn = document.getElementById("clear-history-btn");
+
+    function addToHistory(title, source, url) {
+        readingHistory.unshift({ title, source, url, time: new Date().toLocaleString() });
+        renderHistory();
+    }
+
+    function renderHistory() {
+    historyList.innerHTML = "";
+
+        readingHistory.forEach(item => {
+            historyList.innerHTML += `
+                <div class="p-4 rounded-lg bg-[#1A1A1A] border border-gray-700 hover:bg-[#222] transition">
+
+                    <a href="${item.url}" target="_blank" 
+                    class="text-white font-semibold text-base hover:text-[--bbc-red] transition">
+                        ${item.title}
+                    </a>
+
+                    <div class="text-gray-400 text-xs mt-1">
+                        Source: ${item.source} — ${item.time}
+                    </div>
+
+                </div>
+            `;
+        });
+    }
+
+
+    clearHistoryBtn.addEventListener("click", () => {
+        readingHistory = [];
+        renderHistory();
+    });
+
+    document.querySelectorAll("[data-article-title]").forEach(link => {
+        link.addEventListener("click", (e) => {
+            addToHistory(
+                link.getAttribute("data-article-title"),
+                link.getAttribute("data-article-source"),
+                link.href
+            );
+        });
+    });
+
+}); // END DOMContentLoaded
+// =======================================================
+// NEWS RECOMMENDATION TOOL — FULL WORKING LOGIC
+// =======================================================
+
+const recModal = document.getElementById("recommendation-modal");
+const recBtnOpen = document.getElementById("open-recommendation-modal");
+const recBtnClose = document.getElementById("close-recommendation-modal");
+const recBtn = document.getElementById("recBtn");
+const recInput = document.getElementById("recInput");
+const recResults = document.getElementById("recResults");
+
+// Open modal
+if (recBtnOpen) {
+    recBtnOpen.addEventListener("click", () => {
+        recModal.classList.remove("hidden");
+    });
+}
+
+// Close modal
+recBtnClose.addEventListener("click", () => {
+    recModal.classList.add("hidden");
+    recResults.classList.add("hidden");
+});
+
+// Recommendation fetch
+recBtn.addEventListener("click", async () => {
+    const query = recInput.value.trim();
+    if (!query) return;
+
+    recBtn.textContent = "Finding...";
+    recBtn.disabled = true;
+
+    const res = await fetch("/api/recommend", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ query })
+    });
+
+    const data = await res.json();
+
+    if (data.status !== "ok") {
+        recResults.innerHTML = `<p class="text-red-400">Error: ${data.message}</p>`;
+    } else {
+        recResults.innerHTML = `
+            <h2 class="text-xl font-bold mb-4 text-white">Results:</h2>
+            ${data.recs.map(r => `
+                <div class="result-card">
+                    <a href="${r.link}" target="_blank" class="result-title">
+                        ${r.title}
+                    </a>
+                    <p class="result-desc">${r.description || ""}</p>
+                </div>
+            `).join("")}
+        `;
+    }
+
+
+    recResults.classList.remove("hidden");
+    recBtn.textContent = "Recommend News";
+    recBtn.disabled = false;
+});
+
+// ARTICLE COMPARISON TOOL
+const compareModal = document.getElementById("compare-modal");
+const compareBtnOpen = document.getElementById("open-compare-modal");
+const compareBtnClose = document.getElementById("close-compare-modal");
+const compareBtn = document.getElementById("compareBtn");
+const compareInput = document.getElementById("compareInput");
+const compareResult = document.getElementById("compareResult");
+
+// open
+compareBtnOpen.addEventListener("click", () => {
+    compareModal.classList.remove("hidden");
+});
+
+// close
+compareBtnClose.addEventListener("click", () => {
+    compareModal.classList.add("hidden");
+    compareResult.classList.add("hidden");
+});
+
+// run comparison
+compareBtn.addEventListener("click", async () => {
+    const urls = compareInput.value.trim().split("\n");
+
+    if (urls.length < 2) {
+        alert("Enter at least 2 URLs.");
+        return;
+    }
+
+    compareBtn.textContent = "Comparing...";
+    compareBtn.disabled = true;
+
+    const resp = await fetch("/api/compare_articles", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ urls })
+    });
+
+    const data = await resp.json();
+
+    if (data.error) {
+        compareResult.innerHTML = `<p class="text-red-400">${data.error}</p>`;
+    } else {
+        compareResult.innerHTML = `
+            <p><strong>Verdict:</strong> ${data.verdict}</p>
+            <p><strong>Similarity:</strong> ${(data.similarity*100).toFixed(2)}%</p>
+
+            <h3 class="mt-4 text-lg font-bold text-white">Common Summary</h3>
+            <p class="mt-2">${data.common_summary}</p>
+
+            <h3 class="mt-4 text-lg font-bold text-white">Article Summaries</h3>
+            ${data.articles.map(a => `
+                <div class="mt-3 border border-gray-700 p-3 rounded">
+                    <p class="text-blue-400">${a.url}</p>
+                    <p>${a.summary}</p>
+                </div>
+            `).join("")}
+        `;
+    }
+
+    compareResult.classList.remove("hidden");
+    compareBtn.textContent = "Compare Articles";
+    compareBtn.disabled = false;
+});
+
+// ===============================================
+// AUTO REFRESH NEWS EVERY 90 SECONDS
+// ===============================================
+
+const REFRESH_INTERVAL = 90 * 1000; // 90 seconds
+
+async function autoRefreshNews() {
+    try {
+        const category = "{{ current_category | lower }}";
+
+        const res = await fetch(`/api/latest_news?category=${category}`);
+        const data = await res.json();
+
+        if (!data.articles || data.articles.length === 0) return;
+
+        const container = document.querySelector("section.grid");
+        if (!container) return;
+
+        container.innerHTML = data.articles.map(a => `
+            <article class="col-span-1 bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden">
+
+                ${a.image_url ? `
+                    <img src="${a.image_url}" class="w-full h-64 object-cover">
+                ` : `
+                    <div class="w-full h-64 bg-gray-300 flex items-center justify-center">
+                        No Image Available
+                    </div>
+                `}
+
+                <div class="p-6">
+                    <span class="text-sm font-semibold uppercase category-${a.category}">
+                        ${a.category}
+                    </span>
+
+                    <h3 class="mt-2 text-2xl font-bold">
+                        <a href="${a.url}" target="_blank">${a.title}</a>
+                    </h3>
+
+                    <p class="mt-4 text-gray-600 line-clamp-3">
+                        ${a.description ?? ""}
+                    </p>
+
+                    <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>Source: ${a.source}</span>
+                        <a href="${a.url}" target="_blank" class="text-red-600">Read Full Story →</a>
+                    </div>
+                </div>
+            </article>
+        `).join("");
+
+        lucide.createIcons();
+
+    } catch (err) {
+        console.error("Auto-refresh error:", err);
+    }
+}
+
+setInterval(autoRefreshNews, REFRESH_INTERVAL);
+
+
+
+</script>
+</body>
+</html>
