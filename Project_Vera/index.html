@@ -266,6 +266,19 @@
         #recResults a:hover {
             color: #bcd3ff !important;
         }
+        #sidebar {
+            overflow-y: auto;  /* Enable scrolling */
+            scrollbar-width: thin; /* Firefox */
+        }
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 6px;
+        }
+        #sidebar .scroll-zone {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
 
 
     </style>
@@ -284,7 +297,16 @@
             </button>
         </div>
 
+
+        <div class="scroll-zone">
+            <nav class="p-4 space-y-2">
+                <!-- all sidebar links here -->
+            </nav>
+        </div>
+
+
         <nav class="flex-grow p-4 space-y-2">
+            
 
             <!-- HOME -->
             <a href="{{ url_for('index') }}"
@@ -332,12 +354,7 @@
                 <span class="sidebar-tooltip">Sentiment Analysis</span>
             </a>
 
-            <a href="#" id="open-false-news-modal"
-                class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] relative">
-                <i data-lucide="search-check" class="w-5 h-5 mr-3"></i>
-                <span class="nav-text text-sm font-medium">Image Search (False News)</span>
-                <span class="sidebar-tooltip">False Image Check</span>
-            </a>
+
 
             <a href="#" id="open-summary-modal"
                 class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
@@ -345,11 +362,7 @@
                 <span class="nav-text text-sm">Summarize Article</span>
             </a>
 
-            <a href="#" id="open-history-modal"
-                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
-                <i data-lucide="history" class="w-5 h-5 mr-3"></i>
-                <span class="nav-text text-sm">Reading History</span>
-            </a>
+
 
             <button id="open-recommendation-modal"
                 class="tool-btn flex items-center w-full p-3 rounded-lg hover:bg-[--sidebar-light] relative text-left">
@@ -359,17 +372,39 @@
             </button>
 
 
-            <a href="/cluster"
-                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
-                <i data-lucide="network" class="w-5 h-5 mr-3"></i>
-                <span class="nav-text text-sm">Story Clustering</span>
-            </a>
+
 
             <!-- FAKE NEWS DETECTOR (TEXT/URL) -->
             <a href="#" id="open-fake-news-modal"
                 class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
                 <i data-lucide="shield-check" class="w-5 h-5 mr-3"></i>
                 <span class="nav-text text-sm">Fake News Detector</span>
+            </a>
+
+            <a href="#" id="open-compare-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
+                <i data-lucide="link" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Article Comparison</span>
+            </a>
+
+
+            <a href="/cluster" 
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]"> 
+                <i data-lucide="network" class="w-5 h-5 mr-3"></i> 
+                <span class="nav-text text-sm">Story Clustering</span> 
+            </a>
+
+            <a href="#" id="open-false-news-modal"
+                class="flex items-center p-3 rounded-lg hover:bg-[--sidebar-light] relative">
+                <i data-lucide="search-check" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm font-medium">Image Search (False News)</span>
+                <span class="sidebar-tooltip">False Image Check</span>
+            </a>
+
+            <a href="#" id="open-history-modal"
+                class="tool-btn flex items-center p-3 rounded-lg hover:bg-[--sidebar-light]">
+                <i data-lucide="history" class="w-5 h-5 mr-3"></i>
+                <span class="nav-text text-sm">Reading History</span>
             </a>
 
         </nav>
@@ -985,6 +1020,41 @@ Paste Article 3…"></textarea>
         <div id="recResults"
             class="hidden mt-8 bg-[#111] rounded-xl p-6 border border-gray-700"></div>
 
+    </div>
+</div>
+    <!-- ARTICLE COMPARISON MODAL — GLASS NEO -->
+<div id="compare-modal" 
+     class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+
+    <div class="w-full max-w-2xl bg-[#1E1E1E] rounded-2xl shadow-xl p-8 border border-gray-700/50">
+
+        <h2 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <i data-lucide="link" class="w-7 h-7 text-blue-400"></i>
+            Article Comparison Tool
+        </h2>
+
+        <p class="text-gray-400 text-sm mb-6">Enter two or more article URLs to compare.</p>
+
+        <textarea id="compareInput"
+            class="w-full h-40 bg-[#2A2A2A] text-gray-200 p-4 rounded-lg border border-gray-700 
+                   focus:border-blue-500 focus:outline-none custom-scroll"
+            placeholder="https://article1.com\nhttps://article2.com"></textarea>
+
+        <button id="compareBtn"
+            class="w-full py-3 mt-4 bg-blue-600 hover:bg-blue-700 transition rounded-lg 
+                   font-semibold text-white">
+            Compare Articles
+        </button>
+
+        <button id="close-compare-modal"
+            class="w-full py-3 mt-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200">
+            Cancel
+        </button>
+
+        <div id="compareResult"
+            class="hidden mt-8 bg-[#0f0f0f] rounded-xl border border-gray-700 p-6 
+                   max-h-[350px] overflow-y-auto custom-scroll text-gray-300 text-sm">
+        </div>
     </div>
 </div>
 
@@ -1641,6 +1711,131 @@ recBtn.addEventListener("click", async () => {
     recBtn.textContent = "Recommend News";
     recBtn.disabled = false;
 });
+
+// ARTICLE COMPARISON TOOL
+const compareModal = document.getElementById("compare-modal");
+const compareBtnOpen = document.getElementById("open-compare-modal");
+const compareBtnClose = document.getElementById("close-compare-modal");
+const compareBtn = document.getElementById("compareBtn");
+const compareInput = document.getElementById("compareInput");
+const compareResult = document.getElementById("compareResult");
+
+// open
+compareBtnOpen.addEventListener("click", () => {
+    compareModal.classList.remove("hidden");
+});
+
+// close
+compareBtnClose.addEventListener("click", () => {
+    compareModal.classList.add("hidden");
+    compareResult.classList.add("hidden");
+});
+
+// run comparison
+compareBtn.addEventListener("click", async () => {
+    const urls = compareInput.value.trim().split("\n");
+
+    if (urls.length < 2) {
+        alert("Enter at least 2 URLs.");
+        return;
+    }
+
+    compareBtn.textContent = "Comparing...";
+    compareBtn.disabled = true;
+
+    const resp = await fetch("/api/compare_articles", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ urls })
+    });
+
+    const data = await resp.json();
+
+    if (data.error) {
+        compareResult.innerHTML = `<p class="text-red-400">${data.error}</p>`;
+    } else {
+        compareResult.innerHTML = `
+            <p><strong>Verdict:</strong> ${data.verdict}</p>
+            <p><strong>Similarity:</strong> ${(data.similarity*100).toFixed(2)}%</p>
+
+            <h3 class="mt-4 text-lg font-bold text-white">Common Summary</h3>
+            <p class="mt-2">${data.common_summary}</p>
+
+            <h3 class="mt-4 text-lg font-bold text-white">Article Summaries</h3>
+            ${data.articles.map(a => `
+                <div class="mt-3 border border-gray-700 p-3 rounded">
+                    <p class="text-blue-400">${a.url}</p>
+                    <p>${a.summary}</p>
+                </div>
+            `).join("")}
+        `;
+    }
+
+    compareResult.classList.remove("hidden");
+    compareBtn.textContent = "Compare Articles";
+    compareBtn.disabled = false;
+});
+
+// ===============================================
+// AUTO REFRESH NEWS EVERY 90 SECONDS
+// ===============================================
+
+const REFRESH_INTERVAL = 90 * 1000; // 90 seconds
+
+async function autoRefreshNews() {
+    try {
+        const category = "{{ current_category | lower }}";
+
+        const res = await fetch(`/api/latest_news?category=${category}`);
+        const data = await res.json();
+
+        if (!data.articles || data.articles.length === 0) return;
+
+        const container = document.querySelector("section.grid");
+        if (!container) return;
+
+        container.innerHTML = data.articles.map(a => `
+            <article class="col-span-1 bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden">
+
+                ${a.image_url ? `
+                    <img src="${a.image_url}" class="w-full h-64 object-cover">
+                ` : `
+                    <div class="w-full h-64 bg-gray-300 flex items-center justify-center">
+                        No Image Available
+                    </div>
+                `}
+
+                <div class="p-6">
+                    <span class="text-sm font-semibold uppercase category-${a.category}">
+                        ${a.category}
+                    </span>
+
+                    <h3 class="mt-2 text-2xl font-bold">
+                        <a href="${a.url}" target="_blank">${a.title}</a>
+                    </h3>
+
+                    <p class="mt-4 text-gray-600 line-clamp-3">
+                        ${a.description ?? ""}
+                    </p>
+
+                    <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>Source: ${a.source}</span>
+                        <a href="${a.url}" target="_blank" class="text-red-600">Read Full Story →</a>
+                    </div>
+                </div>
+            </article>
+        `).join("");
+
+        lucide.createIcons();
+
+    } catch (err) {
+        console.error("Auto-refresh error:", err);
+    }
+}
+
+setInterval(autoRefreshNews, REFRESH_INTERVAL);
+
+
 
 </script>
 </body>
